@@ -39,6 +39,31 @@ describe('KillSwitch', () => {
     expect(killSwitch.getHistory()[0]?.terminated).toBe(false);
   });
 
+  it('stops waiting for a hung termination handler and continues the kill flow', async () => {
+    const events: string[] = [];
+    const killSwitch = new KillSwitch({ callbackTimeoutMs: 20 });
+
+    killSwitch.registerHandler('agent-hung', async () => {
+      await new Promise<void>(() => undefined);
+    });
+    killSwitch.registerHandler('agent-hung', async () => {
+      events.push('second-handler');
+    });
+    killSwitch.registerCompensation('agent-hung', async () => {
+      events.push('compensation');
+    });
+
+    const result = await killSwitch.kill('agent-hung', {
+      reason: 'rate_limit',
+    });
+
+    expect(result.terminated).toBe(false);
+    expect(result.callbacksExecuted).toBe(2);
+    expect(result.compensationsExecuted).toBe(1);
+    expect(events).toEqual(['second-handler', 'compensation']);
+    expect(killSwitch.getHistory()[0]?.terminated).toBe(false);
+  });
+
   it('records substitute handoff targets', async () => {
     const killSwitch = new KillSwitch();
     killSwitch.registerSubstitute('agent-1', 'agent-2');

@@ -253,6 +253,8 @@ export interface RingViolation {
 export interface KillSwitchConfig {
   enabled?: boolean;
   defaultSubstituteAgentId?: string;
+  /** Maximum time to await each termination handler before continuing. Default 5000 ms. */
+  callbackTimeoutMs?: number;
 }
 
 export interface KillSwitchResult {
