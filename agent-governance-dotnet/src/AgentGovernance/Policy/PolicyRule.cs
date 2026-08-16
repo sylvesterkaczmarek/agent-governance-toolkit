@@ -41,7 +41,7 @@ public sealed class PolicyRule
         new(@"^(\w+(?:\.\w+)*)\s*!=\s*['""]([^'""]+)['""]$", RegexOptions.Compiled);
 
     private static readonly Regex NumericComparisonPattern =
-        new(@"^(\w+(?:\.\w+)*)\s*(>=|<=|>|<)\s*(\d+(?:\.\d+)?)$", RegexOptions.Compiled);
+        new(@"^(\w+(?:\.\w+)*)\s*(==|!=|>=|<=|>|<)\s*(-?\d+(?:\.\d+)?)$", RegexOptions.Compiled);
 
     private static readonly Regex InListPattern =
         new(@"^(\w+(?:\.\w+)*)\s+in\s+(\w+(?:\.\w+)*)$", RegexOptions.Compiled);
@@ -236,7 +236,7 @@ public sealed class PolicyRule
             return !string.Equals(fieldValue?.ToString(), match.Groups[2].Value, StringComparison.Ordinal);
         }
 
-        // Numeric comparison: field > 10, field <= 100
+        // Numeric comparison: field == 10, field != 10, field > 10, field <= 100
         match = NumericComparisonPattern.Match(expression);
         if (match.Success)
         {
@@ -246,6 +246,8 @@ public sealed class PolicyRule
             {
                 return match.Groups[2].Value switch
                 {
+                    "==" => left == right,
+                    "!=" => left != right,
                     ">" => left > right,
                     ">=" => left >= right,
                     "<" => left < right,
